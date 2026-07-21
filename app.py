@@ -7,6 +7,7 @@ import logging
 
 # 1. Obtain a named logger instance
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 load_dotenv()  # reads the .env file into os.environ
 
@@ -45,8 +46,8 @@ def send_whatsapp_via_twilio(data):
             f"Qty: {data.get('qty')}\n"
             f"Message: {data.get('message') or '-'}"
         )
-        logger.info("FROM: %s", TWILIO_WHATSAPP_FROM)
-        logger.info("TO: %s", OWNER_WHATSAPP_TO)
+        logger.error("FROM = %r", TWILIO_WHATSAPP_FROM)
+        logger.error("TO   = %r", OWNER_WHATSAPP_TO)
         msg = client.messages.create(from_=TWILIO_WHATSAPP_FROM, to=OWNER_WHATSAPP_TO, body=body)
         
         return True, msg.sid
