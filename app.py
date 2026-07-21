@@ -3,6 +3,10 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
 import csv
+import logging
+
+# 1. Obtain a named logger instance
+logger = logging.getLogger(__name__)
 
 load_dotenv()  # reads the .env file into os.environ
 
@@ -57,6 +61,7 @@ def thank_you():
 @app.route("/submit-quote", methods=["POST"])
 def submit_quote():
     data = request.get_json(force=True)
+
     if not data.get("name") or not data.get("phone"):
         return jsonify({"ok": False, "error": "Name and phone required"}), 400
 
@@ -65,9 +70,25 @@ def submit_quote():
     sent, info = send_whatsapp_via_twilio(data)
 
     if not sent:
-        return jsonify({"ok": False, "sent_via_twilio": False, "error": info}), 502
+        logger.error("=" * 60)
+        logger.error("Twilio WhatsApp sending failed")
+        logger.error("Reason: %s", info)
+        logger.error("Request Data: %s", data)
+        logger.error("=" * 60)
 
-    return jsonify({"ok": True, "sent_via_twilio": True, "info": info})
+        return jsonify({
+            "ok": False,
+            "sent_via_twilio": False,
+            "error": info
+        }), 502
+
+    logger.info("Twilio WhatsApp sent successfully. SID: %s", info)
+
+    return jsonify({
+        "ok": True,
+        "sent_via_twilio": True,
+        "info": info
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)
